@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { auth } from "@/lib/auth";
+import { authSafe, getAuthConfigError } from "@/lib/auth";
 import { connectToDatabase, getMongoConfigError } from "@/lib/mongodb";
 import { slugify } from "@/lib/utils";
 import { validatePostInput } from "@/lib/validation";
@@ -16,7 +16,11 @@ export type FormState = {
 };
 
 async function requireUser() {
-  const session = await auth();
+  const { session, error } = await authSafe();
+
+  if (error) {
+    throw new Error(error);
+  }
 
   if (!session?.user?.id) {
     redirect("/login");
@@ -27,6 +31,10 @@ async function requireUser() {
 
 function getDatabaseActionError() {
   return getMongoConfigError() ?? "Database connection failed. Check your MongoDB Atlas configuration and restart the server.";
+}
+
+function getAuthActionError() {
+  return getAuthConfigError() ?? "Authentication failed to initialize. Check your Vercel auth environment variables and redeploy.";
 }
 
 export async function signUp(_: FormState, formData: FormData): Promise<FormState> {
@@ -81,7 +89,14 @@ async function uniqueSlug(baseSlug: string, excludeId?: string) {
 }
 
 export async function createPost(_: FormState, formData: FormData): Promise<FormState> {
-  const user = await requireUser();
+  let user;
+
+  try {
+    user = await requireUser();
+  } catch {
+    return { error: getAuthActionError() };
+  }
+
   const input = {
     title: formData.get("title")?.toString() ?? "",
     body: formData.get("body")?.toString() ?? "",
@@ -113,7 +128,14 @@ export async function createPost(_: FormState, formData: FormData): Promise<Form
 }
 
 export async function updatePost(postId: string, _: FormState, formData: FormData): Promise<FormState> {
-  const user = await requireUser();
+  let user;
+
+  try {
+    user = await requireUser();
+  } catch {
+    return { error: getAuthActionError() };
+  }
+
   const input = {
     title: formData.get("title")?.toString() ?? "",
     body: formData.get("body")?.toString() ?? "",
@@ -152,7 +174,14 @@ export async function updatePost(postId: string, _: FormState, formData: FormDat
 }
 
 export async function deletePost(formData: FormData) {
-  const user = await requireUser();
+  let user;
+
+  try {
+    user = await requireUser();
+  } catch {
+    throw new Error(getAuthActionError());
+  }
+
   const postId = formData.get("postId")?.toString() ?? "";
 
   try {

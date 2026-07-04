@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { deletePost } from "@/app/actions";
 import { SetupNotice } from "@/app/components/setup-notice";
-import { auth } from "@/lib/auth";
+import { authSafe } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getMongoConfigError } from "@/lib/mongodb";
 import { formatDate } from "@/lib/utils";
@@ -19,7 +19,11 @@ type DashboardPost = {
 };
 
 export default async function DashboardPage() {
-  const session = await auth();
+  const { session, error: authError } = await authSafe();
+
+  if (authError) {
+    return <SetupNotice title="Authentication setup required" message={authError} />;
+  }
 
   if (!session?.user?.id) {
     redirect("/login");

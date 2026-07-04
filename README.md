@@ -44,3 +44,27 @@ npm run dev
 - Slugs are generated from the title and made unique automatically.
 - Homepage and post detail pages are server-rendered on demand.
 - Without a valid MongoDB Atlas connection string, the data-backed routes cannot load.
+
+## Vercel deployment
+
+Set environment variables in Vercel for the correct environments:
+
+- `MONGODB_URI`
+- `NEXTAUTH_SECRET`
+- `NEXTAUTH_URL`
+
+Recommended values:
+
+- Local development: `NEXTAUTH_URL=http://localhost:3000`
+- Production: `NEXTAUTH_URL=https://your-production-domain.vercel.app`
+- Preview: either leave `NEXTAUTH_URL` unset or set it to that preview deployment URL
+
+Do not store multiple URLs in `NEXTAUTH_URL`.
+
+For MongoDB Atlas, use a connection string with a database name:
+
+```env
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-host>/engitrack-blog?retryWrites=true&w=majority&appName=<app-name>
+```
+
+Atlas must also allow the deployment to connect under `Security -> Network Access`.

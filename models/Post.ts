@@ -1,5 +1,7 @@
 import { Schema, model, models } from "mongoose";
 
+import "@/models/User";
+
 export interface PostDocument {
   _id: string;
   title: string;

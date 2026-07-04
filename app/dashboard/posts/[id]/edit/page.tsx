@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { updatePost } from "@/app/actions";
 import { PostForm } from "@/app/components/post-form";
 import { SetupNotice } from "@/app/components/setup-notice";
-import { auth } from "@/lib/auth";
+import { authSafe } from "@/lib/auth";
 import { connectToDatabase, getMongoConfigError } from "@/lib/mongodb";
 import { Post } from "@/models/Post";
 
@@ -16,7 +16,11 @@ type EditablePost = {
 };
 
 export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
-  const session = await auth();
+  const { session, error: authError } = await authSafe();
+
+  if (authError) {
+    return <SetupNotice title="Authentication setup required" message={authError} />;
+  }
 
   if (!session?.user?.id) {
     redirect("/login");

@@ -1,8 +1,10 @@
 import { SignUpForm } from "@/app/components/signup-form";
 import { SetupNotice } from "@/app/components/setup-notice";
+import { getAuthConfigError } from "@/lib/auth";
 import { getMongoConfigError } from "@/lib/mongodb";
 
 export default function SignUpPage() {
+  const authError = getAuthConfigError();
   const configError = getMongoConfigError();
 
   return (
@@ -12,7 +14,13 @@ export default function SignUpPage() {
           <p className="eyebrow">Account</p>
           <h1>Sign up</h1>
         </div>
-        {configError ? <SetupNotice title="Database setup required for sign up" message={configError} /> : <SignUpForm />}
+        {authError ? (
+          <SetupNotice title="Authentication setup required" message={authError} />
+        ) : configError ? (
+          <SetupNotice title="Database setup required for sign up" message={configError} />
+        ) : (
+          <SignUpForm />
+        )}
       </div>
     </section>
   );
