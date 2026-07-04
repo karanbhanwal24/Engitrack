@@ -5,6 +5,7 @@ import { SetupNotice } from "@/app/components/setup-notice";
 import { connectToDatabase, getMongoConfigError } from "@/lib/mongodb";
 import { formatDate } from "@/lib/utils";
 import { Post } from "@/models/Post";
+import { User } from "@/models/User";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +33,9 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
     return <SetupNotice message={error instanceof Error ? error.message : "Failed to connect to MongoDB."} />;
   }
 
-  const post = (await Post.findOne({ slug }).populate("author", "name email").lean()) as DetailPost | null;
+  const post = (await Post.findOne({ slug })
+    .populate({ path: "author", select: "name email", model: User })
+    .lean()) as DetailPost | null;
 
   if (!post) {
     notFound();

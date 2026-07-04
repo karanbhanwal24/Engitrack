@@ -5,6 +5,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { getMongoConfigError } from "@/lib/mongodb";
 import { excerpt, formatDate } from "@/lib/utils";
 import { Post } from "@/models/Post";
+import { User } from "@/models/User";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +33,10 @@ export default async function HomePage() {
     return <SetupNotice message={error instanceof Error ? error.message : "Failed to connect to MongoDB."} />;
   }
 
-  const posts = (await Post.find({}).sort({ createdAt: -1 }).populate("author", "name email").lean()) as unknown as HomePost[];
+  const posts = (await Post.find({})
+    .sort({ createdAt: -1 })
+    .populate({ path: "author", select: "name email", model: User })
+    .lean()) as unknown as HomePost[];
 
   return (
     <section className="page-section">
